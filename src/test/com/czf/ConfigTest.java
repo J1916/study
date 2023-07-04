@@ -275,9 +275,5 @@ public class ConfigTest {
     public void addMethodTest(){
     }
 
-    @Test
-    public void addMethodTest2(){
-    }
-
 
 }
