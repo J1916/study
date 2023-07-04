@@ -1,0 +1,18 @@
+server:
+  port: 8080
+  tomcat:
+    max-threads: 3 #最大线程数
+    max-connections: 2000 #最大连接数
+    accept-count: 800 #最大等待数
+
+
+user:
+  name: 李白
+  age: 30
+  phone: 10086
+  address: 四川广陵
+
+
+
+
+

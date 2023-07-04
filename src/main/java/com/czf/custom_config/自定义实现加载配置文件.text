@@ -1,0 +1,2 @@
+自定义配置类
+    通过自定义注解、反射、BeanPostProcess 实现加载properties、yaml配置文件,通过反射对属性赋值

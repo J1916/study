@@ -1,0 +1,98 @@
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public Boolean productionTasks(ProductionTaskVO operationalTaskVO) {
+        List<TbImplementationPlanVO> tbImplementationPlanVOS = operationalTaskVO.getTbImplementationPlanVOS();
+        if (tbImplementationPlanVOS == null) {
+            throw new IllegalArgumentException("TbImplementationPlanVO==================》》》不能为空");
+        }
+        List<TbProductiveTaskImplementationPlanRelateEntity> planRelateEntities = new ArrayList<>();
+        Map<TbImplementationPlanVO, List<TbImplementationPlanEntity>> childPlanMap = new HashMap<>();//key：实施计划  value:子任务
+        Map<TbImplementationPlanEntity, List<TbImplementationDeviceEntity>> childPlanDeviceMap = new HashMap<>();//key：子任务  value:子任务绑定的设备
+
+        //复制
+        if (ImplementationPlanCzlxEo.IMPLEMENTATION_PLAN_CZLX_COPY.getCode()
+                .equals(operationalTaskVO.getCzlx())) {
+            //将引用的任务复制一份
+            tbImplementationPlanVOS.forEach(tbImplementationPlanVO -> {
+                //复制实施计划下关联的子任务
+                List<TbImplementationPlanEntity> childPlanList = tbImplementationPlanMapper.getTbImplementItemPlanListByPlanId(tbImplementationPlanVO.getId());
+                List<Long>  childIdList = childPlanList.stream().map(p -> p.getId()).collect(Collectors.toList());
+
+                //查询子任务绑定的设备
+                LambdaQueryWrapper<TbImplementationDeviceEntity> queryWrapper = Wrappers.lambdaQuery();
+                queryWrapper.in(TbImplementationDeviceEntity::getImplementationId, childIdList);
+                List<TbImplementationDeviceEntity> deviceList = tbImplementationDeviceMapper.selectList(queryWrapper);
+                Map<Long, List<TbImplementationDeviceEntity>>
+                        deviceMap = deviceList.stream().collect(Collectors.groupingBy(TbImplementationDeviceEntity::getImplementationId));
+
+
+                childPlanList.forEach(childPlan -> {
+                    List<TbImplementationDeviceEntity> tbImplementationDeviceEntities = deviceMap.get(childPlan.getId());
+                    tbImplementationDeviceEntities = Optional.ofNullable(tbImplementationDeviceEntities).orElse(Lists.newArrayList());
+                    childPlanDeviceMap.put(childPlan,tbImplementationDeviceEntities);
+                });
+
+                childPlanMap.put(tbImplementationPlanVO, childPlanList);
+                tbImplementationPlanVO.setId(null);
+            });
+
+            List<TbImplementationPlanEntity> tbImplementationPlanEntityList = Lists.newArrayList();
+
+            //复制出来的子任务重新关联新的实施计划
+            childPlanMap.forEach((key, value) -> {
+                TbImplementationPlanEntity tbImplementationPlanEntity
+                        = BeanUtil.copyProperties(key, TbImplementationPlanEntity.class);
+                this.save(tbImplementationPlanEntity);
+                tbImplementationPlanEntityList.add(tbImplementationPlanEntity);
+
+                if (CollUtil.isNotEmpty(value)) {
+                    value.forEach(tb -> {
+                        tb.setId(null);
+                        tb.setPid(tbImplementationPlanEntity.getId());
+                    });
+                    this.saveBatch(value);
+
+                    List<TbImplementItemPlanRelateEntity> itemPlanRelateEntityList = new ArrayList<>();
+                    List<TbImplementationDeviceEntity> saveDeviceList = new ArrayList<>();
+                    value.forEach(tb -> {
+                        //建立父子任务的关联
+                        TbImplementItemPlanRelateEntity tbImplementItemPlanRelateEntity = new TbImplementItemPlanRelateEntity();
+                        tbImplementItemPlanRelateEntity.setImplementationId(tbImplementationPlanEntity.getId()); //获取上级任务Id
+                        tbImplementItemPlanRelateEntity.setImplementationItemId(tb.getId());
+                        itemPlanRelateEntityList.add(tbImplementItemPlanRelateEntity);
+
+                        //设备绑定新的子任务
+                        List<TbImplementationDeviceEntity> tbImplementationDeviceEntities = childPlanDeviceMap.get(tb);
+                        tbImplementationDeviceEntities.forEach(device -> {
+                            device.setId(null);
+                            device.setImplementationId(tb.getId());
+                        });
+                        saveDeviceList.addAll(tbImplementationDeviceEntities);
+                    });
+                    tbImplementItemPlanRelateService.saveBatch(itemPlanRelateEntityList);
+                    tbImplementationDeviceService.saveBatch(saveDeviceList);
+                }
+            });
+
+            tbImplementationPlanEntityList.forEach(tb->{
+                TbProductiveTaskImplementationPlanRelateEntity tp = new TbProductiveTaskImplementationPlanRelateEntity();
+                tp.setImplementationPlanId(tb.getId());
+                tp.setProductiveTaskId(operationalTaskVO.getProductId());
+                planRelateEntities.add(tp);
+            });
+        }
+
+        //引用
+        if(ImplementationPlanCzlxEo.PRODUCTION_PLAN_CZLX_YY.getCode()
+                .equals(operationalTaskVO.getCzlx())){
+            tbImplementationPlanVOS.forEach(tb -> {
+                TbProductiveTaskImplementationPlanRelateEntity tp = new TbProductiveTaskImplementationPlanRelateEntity();
+                tp.setImplementationPlanId(tb.getId());
+                tp.setProductiveTaskId(operationalTaskVO.getProductId());
+                planRelateEntities.add(tp);
+            });
+
+        }
+        planRelateEntities.forEach(v->tbProductiveTaskImplementationPlanRelateMapper.insert(v));
+        return true;
+    }
