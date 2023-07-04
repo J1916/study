@@ -277,10 +277,6 @@ public class ConfigTest {
 
 
     @Test
-    public void addMethodTest2(){
-    }
-
-    @Test
     public void addMethodTest3(){
     }
 
