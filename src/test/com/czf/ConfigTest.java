@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.tree.Tree;
 import cn.hutool.core.lang.tree.TreeNode;
 import cn.hutool.core.lang.tree.TreeUtil;
+import cn.hutool.extra.pinyin.PinyinUtil;
 import com.czf.config.SysConfig;
 import com.czf.custom_config.config.UserConfig;
 import com.czf.entity.Person;
@@ -257,6 +258,15 @@ public class ConfigTest {
         //-Djava.util.concurrent.ForkJoinPool.common.parallelism=5 ,通过调整jvm参数来修改初始化线程数
         ForkJoinPool forkJoinPool = ForkJoinPool.commonPool();
         System.out.println(forkJoinPool.getParallelism());
+
+    }
+
+    /**
+     * 测试拼音库
+     */
+    @Test
+    public void testPngyn(){
+        System.out.println(PinyinUtil.getPinyin("你好哈哈哈哈"));
 
     }
 
