@@ -41,7 +41,9 @@ public class ConfigTest {
         long standardSeconds = new Duration(new DateTime(), new DateTime().millisOfDay().withMaximumValue()).getStandardSeconds();
         System.out.println(standardSeconds);
     }
-
+    /*
+    * 树形节点工具类
+     */
     @Test
     public void nodeList(){
         // 构建node列表
