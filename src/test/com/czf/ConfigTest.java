@@ -270,4 +270,10 @@ public class ConfigTest {
 
     }
 
+
+    @Test
+    public void addMethodTest(){
+    }
+
+
 }
