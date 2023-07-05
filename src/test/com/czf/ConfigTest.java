@@ -4,10 +4,12 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.tree.Tree;
 import cn.hutool.core.lang.tree.TreeNode;
 import cn.hutool.core.lang.tree.TreeUtil;
+import cn.hutool.core.util.EnumUtil;
 import cn.hutool.extra.pinyin.PinyinUtil;
 import com.czf.config.SysConfig;
 import com.czf.custom_config.config.UserConfig;
 import com.czf.entity.Person;
+import com.czf.enums.WorkTicketTypeEnum;
 import com.czf.service.TestService;
 import org.assertj.core.util.Lists;
 import org.joda.time.DateTime;
@@ -272,7 +274,11 @@ public class ConfigTest {
 
 
     @Test
-    public void addMethodTest(){
+    public void testEnum(){
+
+        System.out.println(WorkTicketTypeEnum.getDescByCode(121));
+        System.out.println(WorkTicketTypeEnum.getDescByCode("898"));
+
     }
 
 
